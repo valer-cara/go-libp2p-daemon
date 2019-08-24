@@ -24,6 +24,8 @@ import (
 	multiaddr "github.com/multiformats/go-multiaddr"
 	promhttp "github.com/prometheus/client_golang/prometheus/promhttp"
 
+	logging "github.com/ipfs/go-log"
+
 	_ "net/http/pprof"
 )
 
@@ -97,11 +99,19 @@ func main() {
 		"available in the range [6060-7800], or on the user-provided port via -pprofPort")
 	pprofPort := flag.Uint("pprofPort", 0, "Binds the HTTP pprof handler to a specific port; "+
 		"has no effect unless the pprof option is enabled")
+	logLevel := flag.String("l", "", "comma separated log level spec. eg: subsystem1=debug,subsystem2=info or *=debug")
 
 	flag.Parse()
 
 	var c config.Config
 	var opts []libp2p.Option
+
+	if *logLevel != "" {
+		for _, subsysLevel := range strings.Split(*logLevel, ",") {
+			spec := strings.Split(subsysLevel, "=")
+			logging.SetLogLevel(spec[0], spec[1])
+		}
+	}
 
 	if *configStdin {
 		stdin := bufio.NewReader(os.Stdin)
